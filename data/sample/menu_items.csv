@@ -1,0 +1,49 @@
+item_id,category_id,name,description,price,is_available,is_veg,cuisine,popularity
+1,1,Paneer Tikka,"Charred cottage cheese, ajwain marinade, mint chutney",320,True,True,Tandoor,10
+2,1,Hara Bhara Kebab,"Spinach, green peas and cashew patties",280,True,True,Tandoor,7
+3,1,Chilli Paneer,"Wok-tossed paneer, peppers and spring onion",300,True,True,Chinese,8
+4,1,Chicken 65,"Curry leaf, yoghurt and red chilli fried chicken",360,False,True,South Indian,8
+5,1,Tandoori Mushroom,"Button mushrooms, smoky yogurt marinade",310,True,True,Tandoor,5
+6,1,Crispy Corn,"Sweet corn, curry leaf and chilli salt",240,True,True,Chinese,6
+7,2,Murgh Malai Tikka,Creamy cardamom chicken skewers,420,False,True,Tandoor,9
+8,2,Seekh Kebab,"Minced lamb, green chilli and fresh herbs",390,False,True,Tandoor,8
+9,2,Tandoori Chicken (Half),"Overnight chili-yogurt marinade, clay oven",460,False,True,Tandoor,9
+10,2,Paneer Malai Tikka,"Paneer, cream, cardamom and white pepper",360,True,True,Tandoor,7
+11,2,Lahori Fish Tikka,"Ajwain-spiced river fish, charred lemon",480,False,True,Tandoor,6
+12,2,Soya Chaap,"Malai-marinated soya chaap, smoked butter",320,True,False,Tandoor,4
+13,3,Butter Chicken,"Velvety tomato gravy, fenugreek and white butter",480,False,True,North Indian,10
+14,3,Dal Makhani,Black lentils simmered overnight,320,True,True,North Indian,9
+15,3,Paneer Butter Masala,Cottage cheese in a silky tomato-cashew gravy,380,True,True,North Indian,9
+16,3,Rogan Josh,"Kashmiri lamb, ratanjot and fennel",520,False,True,North Indian,6
+17,3,Kadai Chicken,"Peppers, onions and freshly pounded spices",440,False,True,North Indian,7
+18,3,Malai Kofta,Paneer dumplings in saffron cream,360,True,True,North Indian,6
+19,4,Masala Dosa,"Crisp dosa, spiced potato, coconut chutney",240,True,True,South Indian,8
+20,4,Hyderabadi Chicken Biryani,"Dum-cooked basmati, saffron and mirchi ka salan",420,False,True,South Indian,10
+21,4,Chettinad Chicken,"Peppercorn, fennel and coconut masala",460,False,True,South Indian,6
+22,4,Lemon Rice,"Turmeric rice, peanuts and curry leaf",210,True,True,South Indian,4
+23,4,Rasam & Rice,Tamarind pepper broth with steamed rice,200,True,True,South Indian,4
+24,4,Ghee Podi Idli,Mini idlis tossed in gunpowder and ghee,220,True,True,South Indian,6
+25,5,Grilled Chicken Steak,"Herb butter, mash and seasonal greens",520,False,True,Continental,6
+26,5,Alfredo Pasta,"Fettuccine, parmesan, cracked pepper",390,True,True,Continental,7
+27,5,Mushroom Risotto,"Arborio, porcini, truffle oil",420,True,True,Continental,5
+28,5,Garden Caesar Salad,"Cos lettuce, sourdough croutons, green goddess",320,True,True,Continental,4
+29,5,Herb Roast Potatoes,"Rosemary, sea salt and garlic aioli",240,True,True,Continental,5
+30,5,Peri Peri Chicken,"Flame-grilled chicken, peri peri butter",480,False,True,Continental,7
+31,6,Butter Naan,"Clay oven naan, cultured butter",70,True,True,Tandoor,10
+32,6,Garlic Naan,"Garlic, coriander and ghee",90,True,True,Tandoor,9
+33,6,Tandoori Roti,"Whole wheat, charcoal blistered",50,True,False,Tandoor,5
+34,6,Jeera Rice,"Basmati, cumin and ghee",180,True,True,North Indian,6
+35,6,Steamed Rice,Fluffy basmati,140,True,True,North Indian,5
+36,6,Laccha Paratha,Flaky whole-wheat paratha,90,True,True,Tandoor,7
+37,7,Gulab Jamun,"Warm milk dumplings, saffron syrup",180,True,True,Desserts,7
+38,7,Rasmalai,"Cottage cheese discs, cardamom milk",200,True,True,Desserts,6
+39,7,Chocolate Fondant,"Molten 55% chocolate, vanilla bean ice cream",280,True,True,Desserts,8
+40,7,New York Cheesecake,"Baked cheesecake, berry compote",300,True,False,Desserts,6
+41,7,Kulfi Falooda,"Pistachio kulfi, rose and vermicelli",240,True,True,Desserts,5
+42,7,Tiramisu,"Espresso, mascarpone and cocoa",320,True,True,Desserts,6
+43,8,Masala Chai,"Assam tea, ginger and cardamom",90,True,True,Beverages,7
+44,8,Filter Coffee,South Indian filter decoction,100,True,True,Beverages,7
+45,8,Mango Lassi,Alphonso yoghurt shake,160,True,True,Beverages,7
+46,8,Fresh Lime Soda,"Sweet, salted or mixed",120,True,True,Beverages,6
+47,8,Cold Coffee,"Creamy cold brew, cocoa dust",180,True,True,Beverages,6
+48,8,Virgin Mojito,"Lime, mint and soda",170,True,True,Beverages,6

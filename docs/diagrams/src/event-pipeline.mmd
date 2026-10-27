@@ -1,0 +1,34 @@
+sequenceDiagram
+    autonumber
+    actor Staff as Service team
+    participant SPA as React SPA
+    participant API as Flask API
+    participant MY as MySQL 8.4
+    participant OB as analytics_outbox
+    participant PJ as Projector
+    participant TS as TimescaleDB
+    participant CA as Continuous aggregates
+
+    Staff->>SPA: Pick table, dishes, chef assignments
+    SPA->>API: POST /api/orders
+    API->>MY: BEGIN · insert order + order_item rows
+    MY->>OB: INSERT 1 + N domain events (same transaction)
+    API->>MY: Mark order PLACED · COMMIT
+    API->>PJ: sync after commit
+    PJ->>OB: SELECT … FOR UPDATE SKIP LOCKED
+    PJ->>TS: Batch INSERT order_event · ON CONFLICT DO NOTHING
+    TS->>CA: Real-time tail + 30-minute refresh policies
+    PJ->>OB: SET processed_at = NOW(6)
+    API-->>SPA: 201 · order detail + sync summary
+
+    Staff->>SPA: Start prep → mark prepared → bill → pay
+    SPA->>API: POST status / bill / payments
+    API->>MY: Transactional state changes
+    MY->>OB: ORDER_PREPARING, ORDER_PREPARED,<br/>BILL_GENERATED, PAYMENT_RECEIVED, ORDER_CLOSED
+    API->>PJ: sync after each commit
+    PJ->>TS: Append the new events
+    SPA->>API: GET /api/analytics/revenue-series
+    API->>CA: SELECT time_bucket(…) FROM sales_hourly
+    CA-->>SPA: Chart-ready rows
+
+    Note over MY,TS: Historical backfill bypasses the outbox:<br/>the deterministic seed COPY-loads 283,632 events directly.

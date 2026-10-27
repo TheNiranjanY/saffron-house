@@ -1,0 +1,51 @@
+flowchart TB
+    subgraph CLIENT["React 18 SPA · Vite · :5173"]
+        direction LR
+        POS["POS · Floor · Orders · Billing"]
+        ANA["Analytics workspace"]
+        LAB["SQL Lab · read-only"]
+        POS ~~~ ANA ~~~ LAB
+    end
+
+    API["Flask REST API · :5001<br/>raw SQL · pooled connections · CORS"]
+
+    subgraph MYSQL["MySQL 8.4 · source of truth · :3307"]
+        direction LR
+        OPS["13 normalized tables · staff specialization<br/>3 triggers · 2 procedures · 1 function · 1 view"]
+        OUTBOX["analytics_outbox<br/>written in the same transaction"]
+        OPS ~~~ OUTBOX
+    end
+
+    PROJ["Outbox projector<br/>FOR UPDATE SKIP LOCKED<br/>batched · idempotent"]
+
+    subgraph TS["TimescaleDB 2.31 / PostgreSQL 17 · :5433"]
+        direction LR
+        HT["order_event hypertable<br/>7-day chunks · compressed after 14 days"]
+        CAGG["4 continuous aggregates<br/>hourly · Asia/Kolkata · real-time tail"]
+        HT ~~~ CAGG
+    end
+
+    SEED["Deterministic seed<br/>120 days · 283,632 events"]
+
+    CLIENT <-->|"REST / JSON"| API
+    API -->|"transactions"| OPS
+    OPS -.->|"domain events"| OUTBOX
+    API -->|"sync after commit"| PROJ
+    OUTBOX -->|"SELECT pending"| PROJ
+    PROJ -->|"batch INSERT · ON CONFLICT DO NOTHING"| HT
+    HT -->|"refresh every 30 min"| CAGG
+    API <-.->|"time_bucket · raw SQL"| TS
+    SEED ==>|"historical bulk COPY"| HT
+
+    classDef client fill:#fbf3e6,stroke:#c9873f,color:#2a1a11
+    classDef api fill:#2a1a11,stroke:#2a1a11,color:#f6ecdd
+    classDef mysql fill:#f4e3cf,stroke:#a86b2d,color:#2a1a11
+    classDef ts fill:#e7ecdf,stroke:#5f6f4e,color:#24301d
+    classDef proj fill:#c9873f,stroke:#8a5a20,color:#ffffff
+    classDef seed fill:#fffaf0,stroke:#c9a678,color:#6b4a2f,stroke-dasharray: 4 3
+    class POS,ANA,LAB client
+    class API api
+    class OPS,OUTBOX mysql
+    class HT,CAGG ts
+    class PROJ proj
+    class SEED seed

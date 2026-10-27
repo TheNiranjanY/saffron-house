@@ -1,0 +1,101 @@
+erDiagram
+    STAFF ||--o| WAITER : "specializes as"
+    STAFF ||--o| CHEF : "specializes as"
+    STAFF ||--o| CASHIER : "specializes as"
+    WAITER ||--o{ ORDERS : "serves"
+    CASHIER |o--o{ ORDERS : "settles"
+    CHEF ||--o{ ORDER_ITEM : "prepares"
+    CUSTOMER |o--o{ ORDERS : "places"
+    DINING_TABLE |o--o{ ORDERS : "hosts"
+    ORDERS ||--|{ ORDER_ITEM : "contains"
+    MENU_CATEGORY ||--o{ MENU_ITEM : "groups"
+    MENU_ITEM ||--o{ ORDER_ITEM : "ordered as"
+    ORDERS ||--o| BILL : "generates"
+    BILL ||--o{ PAYMENT : "paid by"
+    BILL ||--o{ ORDER_ITEM : "settles (denormalized)"
+    ORDERS ||..o{ ANALYTICS_OUTBOX : "emits (no FK)"
+
+    STAFF {
+        int staff_id PK
+        varchar name
+        enum role
+        bool is_active
+    }
+    WAITER {
+        int staff_id PK
+        varchar table_section
+    }
+    CHEF {
+        int staff_id PK
+        varchar cuisine_type
+    }
+    CASHIER {
+        int staff_id PK
+        int counter_no UK
+    }
+    CUSTOMER {
+        int customer_id PK
+        varchar name
+        varchar phone
+        datetime created_at
+    }
+    DINING_TABLE {
+        int table_id PK
+        int capacity
+        enum status
+    }
+    MENU_CATEGORY {
+        int category_id PK
+        varchar category_name UK
+    }
+    MENU_ITEM {
+        int item_id PK
+        int category_id FK
+        varchar name
+        decimal price
+        bool is_available
+    }
+    ORDERS {
+        int order_id PK
+        int customer_id FK
+        int table_id FK
+        int waiter_id FK
+        int cashier_id FK
+        enum order_type
+        enum status
+        datetime placed_at
+    }
+    BILL {
+        int bill_id PK
+        int order_id FK
+        decimal subtotal
+        decimal tax
+        decimal grand_total
+        enum payment_status
+        datetime generated_at
+    }
+    ORDER_ITEM {
+        int order_id PK
+        int line_no PK
+        int item_id FK
+        int chef_id FK
+        int quantity
+        decimal price_at_order
+        int bill_id FK
+    }
+    PAYMENT {
+        int payment_id PK
+        int bill_id FK
+        decimal amount
+        enum payment_mode
+        datetime payment_date
+        enum payment_status
+    }
+    ANALYTICS_OUTBOX {
+        bigint outbox_id PK
+        datetime event_time
+        varchar event_type
+        json payload
+        datetime processed_at
+        int attempts
+    }

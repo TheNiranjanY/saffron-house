@@ -1,0 +1,23 @@
+flowchart TB
+    START(( )) --> PLACED["PLACED"]
+    PLACED -->|"start prep<br/>ORDER_PREPARING"| PREPARING["PREPARING"]
+    PREPARING -->|"kitchen finishes<br/>ORDER_PREPARED"| PREPARED["PREPARED"]
+    PREPARED -->|"generate bill<br/>BILL_GENERATED"| BILLED["BILLED"]
+    BILLED -->|"verified payments = grand total<br/>PAYMENT_RECEIVED + ORDER_CLOSED"| CLOSED["CLOSED"]
+    CLOSED --> END(( ))
+
+    PLACED -->|"ORDER_CANCELLED"| CANCELLED["CANCELLED"]
+    PREPARING -->|"ORDER_CANCELLED"| CANCELLED
+    CANCELLED --> RELEASED(( ))
+
+    GUARDS["Database-enforced guards<br/>• one bill per order, at least one item<br/>• bills immutable once generated<br/>• open order keeps its table OCCUPIED<br/>• full payment closes order and frees table"]
+    BILLED -. "settlement" .-> GUARDS
+
+    classDef state fill:#f7ecdc,stroke:#c9873f,color:#2a1a11
+    classDef cancelled fill:#f3e0dc,stroke:#b0654f,color:#542418
+    classDef terminal fill:#9a7350,stroke:#9a7350,color:#9a7350
+    classDef guard fill:#fffaf0,stroke:#d8b98e,color:#4a3322
+    class PLACED,PREPARING,PREPARED,BILLED,CLOSED state
+    class CANCELLED cancelled
+    class START,END,RELEASED terminal
+    class GUARDS guard

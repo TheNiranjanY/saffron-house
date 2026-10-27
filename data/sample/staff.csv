@@ -1,0 +1,44 @@
+staff_id,name,contact,role,table_section,cuisine_type
+1,Aarav Nair,+91 98450 12001,WAITER,Terrace,
+2,Meera Iyer,+91 98450 12002,WAITER,Main Hall,
+3,Rohan Gupta,+91 98450 12003,WAITER,Garden,
+4,Ananya Rao,+91 98450 12004,WAITER,Main Hall,
+5,Kabir Menon,+91 98450 12005,WAITER,Private Dining,
+6,Ishita Sharma,+91 98450 12006,WAITER,Terrace,
+7,Dev Patel,+91 98450 12007,WAITER,Garden,
+8,Sana Khan,+91 98450 12008,WAITER,Main Hall,
+9,Arjun Reddy,+91 98450 12009,WAITER,Terrace,
+10,Priya Verma,+91 98450 12010,WAITER,Private Dining,
+11,Nikhil Joshi,+91 98450 12011,WAITER,Garden,
+12,Tanya Bose,+91 98450 12012,WAITER,Main Hall,
+13,Rahul Pillai,+91 98450 12013,WAITER,Terrace,
+14,Sneha Kapoor,+91 98450 12014,WAITER,Garden,
+15,Aditya Kulkarni,+91 98450 12015,WAITER,Main Hall,
+16,Zoya Sheikh,+91 98450 12016,WAITER,Private Dining,
+17,Karan Malhotra,+91 98450 12017,WAITER,Terrace,
+18,Divya Shenoy,+91 98450 12018,WAITER,Main Hall,
+19,Vivek Chawla,+91 98450 12019,WAITER,Garden,
+20,Nandini Das,+91 98450 12020,WAITER,Private Dining,
+21,Manav Bhatia,+91 98450 12021,WAITER,Terrace,
+22,Riya Thomas,+91 98450 12022,WAITER,Main Hall,
+23,Sanjay Kapoor,+91 98450 13001,CHEF,,Tandoor
+24,Imran Qureshi,+91 98450 13002,CHEF,,Tandoor
+25,Suresh Yadav,+91 98450 13003,CHEF,,North Indian
+26,Pooja Agarwal,+91 98450 13004,CHEF,,North Indian
+27,Vikram Singh,+91 98450 13005,CHEF,,North Indian
+28,Lakshmi Krishnan,+91 98450 13006,CHEF,,South Indian
+29,Ramesh Iyengar,+91 98450 13007,CHEF,,South Indian
+30,Neha Deshpande,+91 98450 13008,CHEF,,Continental
+31,Alex Fernandes,+91 98450 13009,CHEF,,Continental
+32,Wei Chen,+91 98450 13010,CHEF,,Chinese
+33,Maya Lin,+91 98450 13011,CHEF,,Chinese
+34,Fatima Baig,+91 98450 13012,CHEF,,Desserts
+35,Deepa Menon,+91 98450 13013,CHEF,,Desserts
+36,Arun Kumar,+91 98450 13014,CHEF,,Beverages
+37,Farah Ansari,+91 98450 13015,CHEF,,Beverages
+38,Kavya Ramesh,+91 98450 14001,CASHIER,,
+39,Sameer Ali,+91 98450 14002,CASHIER,,
+40,Preeti Sharma,+91 98450 14003,CASHIER,,
+41,Joel D'Souza,+91 98450 14004,CASHIER,,
+42,Ayesha Siddiqui,+91 98450 14005,CASHIER,,
+43,Harish Patel,+91 98450 14006,CASHIER,,
