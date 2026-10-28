@@ -224,12 +224,12 @@ def run_benchmark(days=90, iterations=5):
         "iterations": iterations,
         "results": results,
         "notes": [
-            "Both stores run in Docker on the same laptop; medians exclude one warm-up run.",
+            "Both stores run in Docker on the same host; medians exclude one warm-up run.",
             "Samples alternate store order each round so background load does not favour one store.",
             "Windows follow Asia/Kolkata calendar days, so raw scans and continuous aggregates cover identical events.",
-            "MySQL reads normalized bill/order_item/payment rows through joins and indexes.",
+            "MySQL reads normalized bill, order_item and menu rows through joins and indexes.",
             "TimescaleDB reads a deliberately denormalized event hypertable.",
             "CAGG timings benefit from pre-computed rollups; raw timings are the closer engine-to-engine comparison.",
-            "The seeded window covers roughly 120 restaurant days (~30k orders, ~284k events) — directional, not a production benchmark.",
+            "Roughly 120 restaurant days of seeded history (~30k orders, ~286k events); the 90-day window above holds ~214k of them — directional, not a production benchmark.",
         ],
     }
