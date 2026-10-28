@@ -23,7 +23,7 @@ A complete restaurant POS and analytics application that keeps its operational t
 
 **Read path:** dashboards and charts query the continuous aggregates; cross-store reconciliation reads the raw `order_event` stream instead, so its totals match MySQL exactly rather than sitting on a CAGG refresh boundary. SQL Lab can scan raw events or run relational MySQL queries. The analytics store needs no cross-database joins because dimension names are snapshotted onto each event.
 
-The historical seed is the one intentional exception: it `COPY`-loads 283,634 generated events directly into TimescaleDB instead of replaying them through the outbox (see [Limitations](#honest-limitations)).
+The historical seed is the one intentional exception: it `COPY`-loads 285,583 generated events directly into TimescaleDB instead of replaying them through the outbox (see [Limitations](#honest-limitations)).
 
 More diagrams: [outbox sequence](docs/diagrams/event-pipeline.png) · [order lifecycle](docs/diagrams/order-lifecycle.png) · [ER model](docs/diagrams/er-model.png).
 
@@ -98,7 +98,7 @@ On macOS/Linux use `.venv/bin/python` instead of `.venv/Scripts/python.exe`.
 .venv/Scripts/python.exe backend/scripts/seed.py
 ```
 
-This is deterministic (`seed = 20261025`) and takes roughly 40 seconds on the reference laptop. It writes CSV snapshots under `data/sample/`, truncates the operational tables and the event CSV, reloads both stores, refreshes the continuous aggregates, compresses eligible chunks and writes `data/generated/seed_summary.json`.
+This is deterministic for a given run date (`seed = 20261025`) and takes roughly 20–30 seconds on the reference laptop. It writes CSV snapshots under `data/sample/`, truncates the operational tables and the event CSV, reloads both stores, refreshes the continuous aggregates, compresses eligible chunks and writes `data/generated/seed_summary.json`.
 
 ### 7. Start the API
 
@@ -308,28 +308,28 @@ data/
 
 ## Benchmark
 
-Measured with both databases in Docker on the same laptop, warm runs, **30 interleaved samples per store** (the store order reverses every round). Windows are Kolkata calendar-day aligned so both stores see exactly the same 90 days: **213,741 events, 22,197 bills, ₹28,974,792.50 revenue, difference ₹0.00**.
+Measured with both databases in Docker on the same laptop, warm runs, **30 interleaved samples per store** (the store order reverses every round). Windows are Kolkata calendar-day aligned so both stores see exactly the same 90 days: **213,708 events, 22,195 bills, ₹28,973,872.50 revenue, difference ₹0.00**.
 
 | Scenario (rows returned) | MySQL | Timescale raw | Timescale CAGG | Speed-up |
 | --- | ---: | ---: | ---: | ---: |
-| 90-day daily revenue (90) | 12.84 ms | 17.99 ms | **1.79 ms** | CAGG **7.17×**, raw 0.71× |
-| 7-day hourly revenue (89) | 7.17 ms | — | **1.57 ms** | CAGG **4.56×** |
-| Top 10 menu items (10) | 95.68 ms | **21.59 ms** | — | raw **4.43×** |
+| 90-day daily revenue (90) | 13.66 ms | 18.39 ms | **2.15 ms** | CAGG **6.35×**, raw 0.74× |
+| 7-day hourly revenue (90) | 7.37 ms | — | **1.69 ms** | CAGG **4.36×** |
+| Top 10 menu items (10) | 96.72 ms | **22.41 ms** | — | raw **4.32×** |
 
-Interquartile ranges (p25–p75): daily 12.31–13.57 / 14.50–18.39 / 1.61–2.25 ms; hourly 6.82–7.61 / 1.49–1.70 ms; top items 94.48–97.63 / 18.79–22.11 ms.
+Interquartile ranges (p25–p75): daily 13.19–14.56 / 15.54–18.90 / 1.77–2.50 ms; hourly 7.02–7.76 / 1.57–1.79 ms; top items 95.66–97.93 / 18.58–23.01 ms.
 
-**Read this honestly.** The continuous aggregates win because the work is precomputed: 7.17× on daily revenue, 4.56× on hourly. The raw-vs-MySQL daily comparison goes the other way — 0.71×, meaning TimescaleDB is about 29% *slower* — because MySQL scans ~22k indexed bills while TimescaleDB scans a deliberately wider 214k-event table. The event store is not faster because it is "modern"; it wins only when the data is shaped for the question, as with top items (4.43× from one denormalized table with no menu/order/bill joins). Absolute browser-run timings vary with host load; the canonical numbers above come from the interleaved API run in `data/generated/benchmark-summary.json`, not from the screenshot.
+**Read this honestly.** The continuous aggregates win because the work is precomputed: 6.35× on daily revenue, 4.36× on hourly. The raw-vs-MySQL daily comparison goes the other way — 0.74×, meaning TimescaleDB takes about 35% *more* time — because MySQL scans ~22k indexed bills while TimescaleDB scans a deliberately wider ~214k-event table. The event store is not faster because it is "modern"; it wins only when the data is shaped for the question, as with top items (4.32× from one denormalized table with no menu/order/bill joins). Absolute browser-run timings vary with host load; the canonical numbers above come from the interleaved API run in `data/generated/benchmark-summary.json`, not from the screenshot.
 
 ## Verification summary
 
-- **Seed:** 29,831 orders · 100,180 order items · 29,465 bills · 35,400 payments · 283,634 events · 39.4 s total load.
+- **Seed:** 30,033 orders · 100,924 order items · 29,652 bills · 35,640 payments · 285,583 events · 29.8 s total load.
 - **MySQL integrity:** zero bill-math mismatches, zero orphan items/payments, zero paid-but-open orders, zero closed-but-unpaid orders, zero missing/mismatched `bill_id`; `calc_grand_total` matched stored totals.
 - **TimescaleDB:** 18 chunks, 15 compressed, 92.3% storage saved (12.9×), 4 continuous aggregates and 4 refresh policies active.
-- **Reconciliation:** full-history sales (29,465 bills, ₹38,421,396.00) and successful collections (35,400 payments, ₹38,420,133.01) match MySQL exactly; the ₹1,262.99 gap between billed revenue and collections is the open balance on 3 partial bills.
+- **Reconciliation:** full-history sales (29,652 bills, ₹38,715,655.00) and successful collections (35,640 payments, ₹38,712,994.89) match MySQL exactly; the ₹2,660.11 gap between billed revenue and collections is the open balance on 3 partial bills.
 - **SQL Lab:** all 15 presets execute; writes are rejected before execution.
 - **Tests/build:** 28-test pytest suite passes (rules, catalog, analytics, pagination, time zone), and the Vite production build succeeds.
 
-These figures are from the 25 October 2026 seed run used in the report. The generator anchors its 120-day window to the current date, so a later reseed adds service days and shifts the absolute totals; the invariants, percentages and zero-difference reconciliation still hold.
+These figures are from the 28 October 2026 seed run used for the screenshots. The generator anchors its 120-day window to the current date, so a later reseed adds service days and shifts the absolute totals; the invariants, percentages and zero-difference reconciliation still hold.
 
 ## Diagrams
 
