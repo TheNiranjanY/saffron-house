@@ -20,6 +20,18 @@ if ! grep -qi ubuntu /etc/os-release; then
   exit 1
 fi
 
+log "Base packages"
+APT_PACKAGES=()
+for bin in git curl openssl; do
+  command -v "$bin" >/dev/null 2>&1 || APT_PACKAGES+=("$bin")
+done
+[ -e /etc/ssl/certs/ca-certificates.crt ] || APT_PACKAGES+=("ca-certificates")
+if [ ${#APT_PACKAGES[@]} -gt 0 ]; then
+  export DEBIAN_FRONTEND=noninteractive
+  apt-get update -y
+  apt-get install -y "${APT_PACKAGES[@]}"
+fi
+
 log "Docker"
 if ! command -v docker >/dev/null 2>&1; then
   curl -fsSL https://get.docker.com | sh
