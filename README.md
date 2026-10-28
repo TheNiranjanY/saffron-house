@@ -131,8 +131,14 @@ cd frontend && npm run build
 
 ## Deploy on a single free VM
 
-`deploy/` runs the whole stack on one Ubuntu host — Oracle Cloud Always Free
-(Ampere A1), a home server or any small VPS:
+`deploy/` runs the whole stack on one Ubuntu host — a free-tier cloud VM, a
+home server or any small VPS. The current deployment runs on Azure for
+Students (Standard_B2als_v2, 4 GiB, Ubuntu 24.04):
+
+| Environment | URL |
+| --- | --- |
+| HTTPS (canonical) | https://85-211-182-145.sslip.io |
+| Plain HTTP (VM IP) | http://85.211.182.145 |
 
 | File | Purpose |
 | --- | --- |
@@ -144,10 +150,19 @@ cd frontend && npm run build
 sudo bash -c "curl -fsSL https://raw.githubusercontent.com/TheNiranjanY/saffron-house-da3/main/deploy/bootstrap.sh | bash"
 ```
 
-Open `http://<vm-ip>`. For automatic HTTPS, set `SITE_ADDRESS=<name>.sslip.io`
-(or your own domain) in `deploy/.env` and bring the stack up again. The script
-is idempotent: schema loading and the seed are guarded by `deploy/.seeded`, and
-database credentials never leave the host's gitignored env file.
+Open `http://<vm-ip>`. For automatic HTTPS, set `SITE_ADDRESS` in `deploy/.env`
+to one or more Caddy site addresses — for example
+`SITE_ADDRESS="pos.example.com, http://<vm-ip>"` keeps the bare IP working over
+HTTP while Caddy obtains a certificate for the hostname:
+
+```bash
+sudo sed -i 's|^SITE_ADDRESS=.*|SITE_ADDRESS="pos.example.com, http://<vm-ip>"|' deploy/.env
+sudo docker compose -f deploy/docker-compose.prod.yml --env-file deploy/.env up -d
+```
+
+The script is idempotent: schema loading and the seed are guarded by
+`deploy/.seeded`, and database credentials never leave the host's gitignored
+env file.
 
 ## What you can do
 

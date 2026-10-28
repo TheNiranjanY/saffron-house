@@ -1000,6 +1000,47 @@ The end-to-end evidence was captured from a real live flow: a ₹300 cash plus �
 
 The detailed 10-minute script is in `docs/DEMO.md`. In short: start Docker, load both schemas, install the backend, run the seed, start Flask and Vite, place an order, advance it, bill it, split the payment, inspect analytics, run two or three SQL Lab presets, and finish on the benchmark panel. A clean reseed takes about 40 seconds.
 
+### 12.5 Deployed instance
+
+The full stack runs on a single Ubuntu 24.04 virtual machine (Azure for
+Students, Standard_B2als_v2 — 2 vCPU, 4 GiB — in Malaysia West) under one
+Docker Compose project, `saffron-house-prod`:
+
+| Service | Image | Role |
+| --- | --- | --- |
+| `mysql` | `mysql:8.4` | Operational ledger, triggers, procedures and the outbox table |
+| `timescale` | `timescale/timescaledb:2.31.0-pg17` | Hypertable, four continuous aggregates, compression and retention policies |
+| `api` | built from `deploy/Dockerfile.api` | Flask under gunicorn (2 workers, 4 threads) on port 5001 |
+| `web` | built from `deploy/Dockerfile.web` | Caddy serving the built SPA with deep-link fallback and proxying `/api/*` |
+
+| Environment | URL |
+| --- | --- |
+| HTTPS (Let's Encrypt, auto-renewed) | https://85-211-182-145.sslip.io |
+| Plain HTTP (VM IP) | http://85.211.182.145 |
+
+`deploy/bootstrap.sh` provisions the host end to end: it installs Docker,
+opens ports 80 and 443, generates `deploy/.env` with random database
+passwords, loads both schemas, seeds once behind a `.seeded` marker, and
+brings the stack up. Re-running it is safe.
+
+The deployed instance was verified from a client machine rather than on the
+host itself:
+
+| Check | Result |
+| --- | --- |
+| `/api/health` | MySQL 8.4.13 and TimescaleDB 2.31.0 green, 30,033 orders, 285,583 events, 18 chunks |
+| Cross-store reconciliation | ₹0.00 difference across bills and collections, 0 pending events |
+| Analytics endpoints | all nine return 200 |
+| Compression | 12.9× (118.0 MB → 9.1 MB), 15 of 18 chunks compressed |
+| SQL Lab | ad-hoc query returned in 22 ms; read-only guard intact |
+| Benchmark | executes on the hosted instance |
+| Live write | order #30034 emitted three outbox rows, projected inline: events 285,583 → 285,586, `pending` back to 0, reconciliation still ₹0.00 |
+| Interface | dashboard, `/analytics`, `/sql` and `/floor` render over HTTPS |
+
+The deployed seed was generated on 28 October 2026, three days after the one
+used for the tables above, so its absolute counts differ while every invariant
+and reconciliation difference stays at zero.
+
 ---
 
 ## 13. Limitations and future work

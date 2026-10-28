@@ -1898,6 +1898,110 @@ WHERE event_time &gt;= now() - INTERVAL '30 days';
 <p>The end-to-end evidence was captured from a real live flow: a ₹300 cash plus ₹277.50 UPI split payment, followed by the order closing and its table being freed. Screenshots are captured from the running application, not mockups.</p>
 <h3 id="124-reproducing-the-demonstration">12.4 Reproducing the demonstration</h3>
 <p>The detailed 10-minute script is in <code>docs/DEMO.md</code>. In short: start Docker, load both schemas, install the backend, run the seed, start Flask and Vite, place an order, advance it, bill it, split the payment, inspect analytics, run two or three SQL Lab presets, and finish on the benchmark panel. A clean reseed takes about 40 seconds.</p>
+<h3 id="125-deployed-instance">12.5 Deployed instance</h3>
+<p>The full stack runs on a single Ubuntu 24.04 virtual machine (Azure for
+Students, Standard_B2als_v2 — 2 vCPU, 4 GiB — in Malaysia West) under one
+Docker Compose project, <code>saffron-house-prod</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Service</th>
+<th>Image</th>
+<th>Role</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>mysql</code></td>
+<td><code>mysql:8.4</code></td>
+<td>Operational ledger, triggers, procedures and the outbox table</td>
+</tr>
+<tr>
+<td><code>timescale</code></td>
+<td><code>timescale/timescaledb:2.31.0-pg17</code></td>
+<td>Hypertable, four continuous aggregates, compression and retention policies</td>
+</tr>
+<tr>
+<td><code>api</code></td>
+<td>built from <code>deploy/Dockerfile.api</code></td>
+<td>Flask under gunicorn (2 workers, 4 threads) on port 5001</td>
+</tr>
+<tr>
+<td><code>web</code></td>
+<td>built from <code>deploy/Dockerfile.web</code></td>
+<td>Caddy serving the built SPA with deep-link fallback and proxying <code>/api/*</code></td>
+</tr>
+</tbody>
+</table>
+<table>
+<thead>
+<tr>
+<th>Environment</th>
+<th>URL</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HTTPS (Let's Encrypt, auto-renewed)</td>
+<td>https://85-211-182-145.sslip.io</td>
+</tr>
+<tr>
+<td>Plain HTTP (VM IP)</td>
+<td>http://85.211.182.145</td>
+</tr>
+</tbody>
+</table>
+<p><code>deploy/bootstrap.sh</code> provisions the host end to end: it installs Docker,
+opens ports 80 and 443, generates <code>deploy/.env</code> with random database
+passwords, loads both schemas, seeds once behind a <code>.seeded</code> marker, and
+brings the stack up. Re-running it is safe.</p>
+<p>The deployed instance was verified from a client machine rather than on the
+host itself:</p>
+<table>
+<thead>
+<tr>
+<th>Check</th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/api/health</code></td>
+<td>MySQL 8.4.13 and TimescaleDB 2.31.0 green, 30,033 orders, 285,583 events, 18 chunks</td>
+</tr>
+<tr>
+<td>Cross-store reconciliation</td>
+<td>₹0.00 difference across bills and collections, 0 pending events</td>
+</tr>
+<tr>
+<td>Analytics endpoints</td>
+<td>all nine return 200</td>
+</tr>
+<tr>
+<td>Compression</td>
+<td>12.9× (118.0 MB → 9.1 MB), 15 of 18 chunks compressed</td>
+</tr>
+<tr>
+<td>SQL Lab</td>
+<td>ad-hoc query returned in 22 ms; read-only guard intact</td>
+</tr>
+<tr>
+<td>Benchmark</td>
+<td>executes on the hosted instance</td>
+</tr>
+<tr>
+<td>Live write</td>
+<td>order #30034 emitted three outbox rows, projected inline: events 285,583 → 285,586, <code>pending</code> back to 0, reconciliation still ₹0.00</td>
+</tr>
+<tr>
+<td>Interface</td>
+<td>dashboard, <code>/analytics</code>, <code>/sql</code> and <code>/floor</code> render over HTTPS</td>
+</tr>
+</tbody>
+</table>
+<p>The deployed seed was generated on 28 October 2026, three days after the one
+used for the tables above, so its absolute counts differ while every invariant
+and reconciliation difference stays at zero.</p>
 <hr />
 <h2 id="13-limitations-and-future-work">13. Limitations and future work</h2>
 <h3 id="131-known-limitations">13.1 Known limitations</h3>
