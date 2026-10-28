@@ -9,3 +9,7 @@ data/generated/
 *.log
 .pytest_cache/
 .DS_Store
+docs/DA3-Report.md
+docs/DA3-Report.html
+docs/DA3-Report.pdf
+docs/DEMO.md

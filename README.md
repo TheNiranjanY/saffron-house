@@ -299,10 +299,6 @@ database/
   timescale/01_schema.sql    Hypertable, indexes, continuous aggregates, policies
 frontend/                    React SPA (POS, billing, analytics, SQL Lab)
 docs/
-  DA3-Report.md              Full implementation and evaluation report
-  DA3-Report.pdf             Print-ready report (35 pages)
-  DA3-Report.html            Styled single-page HTML edition
-  DEMO.md                    Step-by-step demonstration runbook
   diagrams/                  Mermaid sources + rendered SVG/PNG
 screenshots/                 Desktop, mobile and end-to-end evidence
 data/
@@ -335,12 +331,9 @@ Interquartile ranges (p25–p75): daily 24.11–35.14 / 22.34–36.13 / 4.19–6
 
 These figures are from the 25 October 2026 seed run used in the report. The generator anchors its 120-day window to the current date, so a later reseed adds service days and shifts the absolute totals; the invariants, percentages and zero-difference reconciliation still hold.
 
-## Documentation
+## Diagrams
 
-- [Demonstration runbook](docs/DEMO.md) — a 10-minute script from empty seed to settled table, analytics and SQL Lab.
-- [DA3 implementation report (PDF)](docs/DA3-Report.pdf) — 35-page print edition with diagrams, tables, benchmark evidence and appendices.
-- [Report source](docs/DA3-Report.md) · [HTML edition](docs/DA3-Report.html) — editable Markdown and a single-page browser version.
-- [ER model](docs/diagrams/er-model.png) · [event pipeline](docs/diagrams/event-pipeline.png) · [order lifecycle](docs/diagrams/order-lifecycle.png)
+- [ER model](docs/diagrams/er-model.png) · [event pipeline](docs/diagrams/event-pipeline.png) · [order lifecycle](docs/diagrams/order-lifecycle.png) · [architecture](docs/diagrams/architecture.png)
 
 ## Honest limitations
 
