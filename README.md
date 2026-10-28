@@ -129,6 +129,26 @@ Open **http://localhost:5173**. Vite proxies `/api` to Flask, so no frontend env
 cd frontend && npm run build
 ```
 
+## Deploy on a single free VM
+
+`deploy/` runs the whole stack on one Ubuntu host — Oracle Cloud Always Free
+(Ampere A1), a home server or any small VPS:
+
+| File | Purpose |
+| --- | --- |
+| `deploy/docker-compose.prod.yml` | MySQL, TimescaleDB, gunicorn API and Caddy, isolated under the `saffron-house-prod` project |
+| `deploy/bootstrap.sh` | Installs Docker, opens 80/443, generates `deploy/.env` with random passwords, loads both schemas, seeds once and starts the site |
+| `deploy/Caddyfile` | Serves the built SPA with deep-link fallback and proxies `/api/*` to Flask |
+
+```bash
+sudo bash -c "curl -fsSL https://raw.githubusercontent.com/TheNiranjanY/saffron-house-da3/main/deploy/bootstrap.sh | bash"
+```
+
+Open `http://<vm-ip>`. For automatic HTTPS, set `SITE_ADDRESS=<name>.sslip.io`
+(or your own domain) in `deploy/.env` and bring the stack up again. The script
+is idempotent: schema loading and the seed are guarded by `deploy/.seeded`, and
+database credentials never leave the host's gitignored env file.
+
 ## What you can do
 
 | Area | Capability |
