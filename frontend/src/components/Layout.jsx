@@ -174,7 +174,7 @@ export default function Layout() {
               {health.data?.sync?.last_processed_at ? ` · ${fromNow(health.data.sync.last_processed_at)}` : ""}
             </p>
           </div>
-          <p className="sidebar__signature">DA3 · Time-series extension</p>
+          <p className="sidebar__signature">Time-series extension</p>
         </div>
       </aside>
 

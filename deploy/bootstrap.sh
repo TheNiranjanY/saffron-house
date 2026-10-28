@@ -3,13 +3,13 @@
 # Installs Docker, opens ports 80/443, clones the repo, builds the stack,
 # loads both schemas, seeds the canonical dataset and starts the site.
 #
-#   curl -fsSL https://raw.githubusercontent.com/TheNiranjanY/saffron-house-da3/main/deploy/bootstrap.sh \
+#   curl -fsSL https://raw.githubusercontent.com/TheNiranjanY/saffron-house/main/deploy/bootstrap.sh \
 #     | sudo bash
 #
 # Re-running is safe: schemas and seed are loaded once (marker deploy/.seeded).
 set -euo pipefail
 
-REPO="${REPO:-https://github.com/TheNiranjanY/saffron-house-da3.git}"
+REPO="${REPO:-https://github.com/TheNiranjanY/saffron-house.git}"
 DIR="${DIR:-/opt/saffron-house}"
 COMPOSE_FILE="deploy/docker-compose.prod.yml"
 

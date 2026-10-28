@@ -283,7 +283,7 @@ export default function BillDetail() {
           <div className="receipt-foot">
             <p>Thank you for dining at Saffron House.</p>
             <span>Revenue is recognised at bill generation; settlements are recorded separately.</span>
-            <span className="receipt-foot__id">BILL #{bill.bill_id} · ORDER #{bill.order_id} · SAFFRON HOUSE DA3</span>
+            <span className="receipt-foot__id">BILL #{bill.bill_id} · ORDER #{bill.order_id} · SAFFRON HOUSE</span>
           </div>
         </div>
 

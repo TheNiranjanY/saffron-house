@@ -1,6 +1,6 @@
 # Saffron House
 
-**Restaurant Order & Billing System · DA3 time-series extension**
+**Restaurant Order & Billing System · MySQL + TimescaleDB**
 
 A complete restaurant POS and analytics application that keeps its operational truth in **MySQL 8.4** and mirrors every meaningful state change into **TimescaleDB 2.31 / PostgreSQL 17** for time-series analysis. A transactional outbox connects the two stores without distributed transactions.
 
@@ -147,7 +147,7 @@ Students (Standard_B2als_v2, 4 GiB, Ubuntu 24.04):
 | `deploy/Caddyfile` | Serves the built SPA with deep-link fallback and proxies `/api/*` to Flask |
 
 ```bash
-sudo bash -c "curl -fsSL https://raw.githubusercontent.com/TheNiranjanY/saffron-house-da3/main/deploy/bootstrap.sh | bash"
+sudo bash -c "curl -fsSL https://raw.githubusercontent.com/TheNiranjanY/saffron-house/main/deploy/bootstrap.sh | bash"
 ```
 
 Open `http://<vm-ip>`. For automatic HTTPS, set `SITE_ADDRESS` in `deploy/.env`
@@ -345,4 +345,4 @@ These figures are from the 25 October 2026 seed run used in the report. The gene
 
 ---
 
-**DA3 · Database Systems mini-project extension** — MySQL was chosen as the relational operational store; TimescaleDB supplies the modern time-series capability without giving up SQL or ACID semantics.
+**MySQL + TimescaleDB** — MySQL was chosen as the relational operational store; TimescaleDB supplies the time-series capability without giving up SQL or ACID semantics.
