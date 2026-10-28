@@ -7,6 +7,7 @@ import psycopg
 from flask import Blueprint, jsonify, request
 
 from restaurant.benchmark import run_benchmark
+from restaurant.config import Config
 from restaurant.db import (
     cursor,
     mysql_read,
@@ -912,8 +913,14 @@ def _execute_ts(sql):
     return columns, rows, elapsed
 
 
+def _require_sql_lab():
+    if not Config.SQL_LAB_ENABLED:
+        raise ApiError("The SQL Lab is disabled on this deployment.", 403)
+
+
 @analytics_bp.get("/sql")
 def sql_catalog():
+    _require_sql_lab()
     return jsonify(
         {
             "queries": CATALOG,
@@ -927,6 +934,7 @@ def sql_catalog():
 
 @analytics_bp.post("/sql")
 def run_sql():
+    _require_sql_lab()
     data = json_body()
     query_id = (data.get("query_id") or "").strip()
     if query_id:
@@ -967,6 +975,7 @@ def run_sql():
 
 @analytics_bp.post("/benchmark")
 def benchmark():
+    _require_sql_lab()
     data = json_body(required=False)
     days = as_int(data.get("days", 90), "days", 7, 300)
     iterations = as_int(data.get("iterations", 5), "iterations", 2, 10)

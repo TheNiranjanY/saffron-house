@@ -20,7 +20,7 @@ def init_pools():
     if _mysql_pool is None:
         _mysql_pool = pooling.MySQLConnectionPool(
             pool_name="saffron_mysql",
-            pool_size=12,
+            pool_size=Config.MYSQL_POOL_SIZE,
             pool_reset_session=True,
             **Config.mysql_config(),
         )
@@ -28,7 +28,7 @@ def init_pools():
         _ts_pool = ConnectionPool(
             conninfo=Config.ts_conninfo(),
             min_size=1,
-            max_size=6,
+            max_size=Config.TS_POOL_MAX,
             timeout=15,
             kwargs={"row_factory": dict_row, "autocommit": True},
             open=True,

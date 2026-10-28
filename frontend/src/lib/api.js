@@ -9,6 +9,8 @@ export class ApiError extends Error {
   }
 }
 
+const BASE = import.meta.env.VITE_API_BASE ?? "";
+
 async function request(path, { method = "GET", body, signal } = {}) {
   const headers = { Accept: "application/json" };
   const init = { method, headers, signal };
@@ -19,7 +21,7 @@ async function request(path, { method = "GET", body, signal } = {}) {
 
   let response;
   try {
-    response = await fetch(`/api${path}`, init);
+    response = await fetch(`${BASE}/api${path}`, init);
   } catch (error) {
     if (error.name === "AbortError") throw error;
     throw new ApiError("Cannot reach the API. Is Flask running on port 5001?", 0);

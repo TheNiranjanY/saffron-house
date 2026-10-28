@@ -1,0 +1,47 @@
+services:
+  - type: web
+    name: saffron-house-api
+    runtime: python
+    plan: free
+    region: singapore
+    rootDir: .
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn --chdir backend --bind 0.0.0.0:$PORT --workers 1 --threads 4 --timeout 120 app:app
+    healthCheckPath: /api/health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: TZ
+        value: Asia/Kolkata
+      - key: FLASK_DEBUG
+        value: "0"
+      - key: SQL_LAB_ENABLED
+        value: "1"
+      - key: TS_SSLMODE
+        value: require
+      - key: MYSQL_POOL_SIZE
+        value: "5"
+      - key: TS_POOL_MAX
+        value: "3"
+      - key: MYSQL_HOST
+        sync: false
+      - key: MYSQL_PORT
+        sync: false
+      - key: MYSQL_DATABASE
+        sync: false
+      - key: MYSQL_USER
+        sync: false
+      - key: MYSQL_PASSWORD
+        sync: false
+      - key: TS_HOST
+        sync: false
+      - key: TS_PORT
+        sync: false
+      - key: TS_DATABASE
+        sync: false
+      - key: TS_USER
+        sync: false
+      - key: TS_PASSWORD
+        sync: false
+      - key: CORS_ORIGINS
+        sync: false
