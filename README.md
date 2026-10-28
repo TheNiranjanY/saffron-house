@@ -308,17 +308,17 @@ data/
 
 ## Benchmark
 
-Measured with both databases in Docker on the same laptop, warm runs, **30 interleaved samples per store** (3 API runs × 10 iterations; the store order reverses every round). Windows are Kolkata calendar-day aligned so both stores see exactly the same 90 days: **212,484 events, 22,085 bills, ₹28,783,764.50 revenue, difference ₹0.00**.
+Measured with both databases in Docker on the same laptop, warm runs, **30 interleaved samples per store** (the store order reverses every round). Windows are Kolkata calendar-day aligned so both stores see exactly the same 90 days: **213,741 events, 22,197 bills, ₹28,974,792.50 revenue, difference ₹0.00**.
 
 | Scenario (rows returned) | MySQL | Timescale raw | Timescale CAGG | Speed-up |
 | --- | ---: | ---: | ---: | ---: |
-| 90-day daily revenue (90) | 30.00 ms | 26.42 ms | **5.58 ms** | CAGG **5.38×**, raw 1.14× |
-| 7-day hourly revenue (92) | 19.35 ms | — | **4.30 ms** | CAGG **4.50×** |
-| Top 10 menu items (10) | 152.55 ms | **27.25 ms** | — | raw **5.60×** |
+| 90-day daily revenue (90) | 12.84 ms | 17.99 ms | **1.79 ms** | CAGG **7.17×**, raw 0.71× |
+| 7-day hourly revenue (89) | 7.17 ms | — | **1.57 ms** | CAGG **4.56×** |
+| Top 10 menu items (10) | 95.68 ms | **21.59 ms** | — | raw **4.43×** |
 
-Interquartile ranges (p25–p75): daily 24.11–35.14 / 22.34–36.13 / 4.19–6.89 ms; hourly 12.41–21.92 / 3.30–5.10 ms; top items 146.52–185.89 / 25.19–29.52 ms.
+Interquartile ranges (p25–p75): daily 12.31–13.57 / 14.50–18.39 / 1.61–2.25 ms; hourly 6.82–7.61 / 1.49–1.70 ms; top items 94.48–97.63 / 18.79–22.11 ms.
 
-**Read this honestly.** The continuous aggregates win because the work is precomputed. The raw-vs-MySQL daily comparison is only 1.14×: MySQL scans ~22k indexed bills while TimescaleDB scans a deliberately wider 212k-event table, so the engines are close for this shape. Top items is 5.6× faster because the event store answers from one denormalized table without the menu/order/bill joins. Absolute browser-run timings vary with host load; the canonical numbers above come from the interleaved API runs in `data/generated/benchmark-summary.json`, not from the screenshot.
+**Read this honestly.** The continuous aggregates win because the work is precomputed: 7.17× on daily revenue, 4.56× on hourly. The raw-vs-MySQL daily comparison goes the other way — 0.71×, meaning TimescaleDB is about 29% *slower* — because MySQL scans ~22k indexed bills while TimescaleDB scans a deliberately wider 214k-event table. The event store is not faster because it is "modern"; it wins only when the data is shaped for the question, as with top items (4.43× from one denormalized table with no menu/order/bill joins). Absolute browser-run timings vary with host load; the canonical numbers above come from the interleaved API run in `data/generated/benchmark-summary.json`, not from the screenshot.
 
 ## Verification summary
 
