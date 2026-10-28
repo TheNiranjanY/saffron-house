@@ -48,7 +48,7 @@ def test_sql_lab_blocks_writes(client):
 
 def test_dashboard_reconciles_both_stores(client):
     dashboard = _get(client, "/api/analytics/dashboard?days=7")
-    assert dashboard["reconciliation"]["matched"] is True
+    assert dashboard["reconciliation"]["matched"] is True, dashboard["reconciliation"]
     assert dashboard["reconciliation"]["revenue_difference"] == 0
     assert dashboard["sync"]["pending"] == 0
 
@@ -158,4 +158,4 @@ def test_full_order_billing_lifecycle(client):
     assert any(item["type"] == "closed" for item in detail["timeline"])
 
     dashboard = _get(client, "/api/analytics/dashboard?days=7")
-    assert dashboard["reconciliation"]["matched"] is True
+    assert dashboard["reconciliation"]["matched"] is True, dashboard["reconciliation"]

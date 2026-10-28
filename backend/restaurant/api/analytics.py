@@ -111,6 +111,26 @@ def _period_metrics(start, end):
     }
 
 
+def _event_totals(start, end):
+    """Exact totals from the event log.
+
+    Reconciliation reads raw events, not the continuous aggregates: a
+    refresh can briefly overlap the real-time tail inside the open hour,
+    so aggregates are eventually consistent while the event stream is exact.
+    """
+    return ts_row(
+        """
+        SELECT COUNT(*) FILTER (WHERE event_type = 'BILL_GENERATED') AS bills,
+               COALESCE(SUM(amount) FILTER (WHERE event_type = 'BILL_GENERATED'), 0) AS revenue,
+               COUNT(*) FILTER (WHERE event_type = 'PAYMENT_RECEIVED') AS payments,
+               COALESCE(SUM(amount) FILTER (WHERE event_type = 'PAYMENT_RECEIVED'), 0) AS collected
+          FROM order_event
+         WHERE event_time >= %s AND event_time < %s
+        """,
+        (start, end),
+    )
+
+
 def _live_counts():
     return mysql_row(
         f"""
@@ -274,9 +294,10 @@ def dashboard():
     except Exception:
         sync = {}
 
-    revenue_difference = round(float(mysql_bills["revenue"]) - float(current["revenue"]), 2)
-    bills_difference = int(mysql_bills["bills"]) - current["bills"]
-    payments_difference = int(mysql_payments["payments"]) - current["payments"]
+    events = _event_totals(start, end)
+    revenue_difference = round(float(mysql_bills["revenue"]) - float(events["revenue"]), 2)
+    bills_difference = int(mysql_bills["bills"]) - int(events["bills"])
+    payments_difference = int(mysql_payments["payments"]) - int(events["payments"])
 
     return jsonify(
         {
@@ -322,10 +343,10 @@ def dashboard():
                     "collected": mysql_payments["collected"],
                 },
                 "timescale": {
-                    "bills": current["bills"],
-                    "revenue": current["revenue"],
-                    "payments": current["payments"],
-                    "collected": current["collected"],
+                    "bills": int(events["bills"]),
+                    "revenue": events["revenue"],
+                    "payments": int(events["payments"]),
+                    "collected": events["collected"],
                 },
                 "revenue_difference": revenue_difference,
                 "bills_difference": bills_difference,
@@ -797,6 +818,19 @@ def storage():
     )
 
 
+SQL_LAB_ROW_LIMIT = 500
+
+
+def _capped(sql):
+    """Bound results server-side so the cursor is always fully consumed.
+
+    MySQL's default cursor is unbuffered: leaving rows unread makes
+    cursor.close() raise "Unread result found". One extra row travels back
+    so the caller can still flag truncation.
+    """
+    return f"SELECT * FROM (\n{sql}\n) AS sql_lab_result LIMIT {SQL_LAB_ROW_LIMIT + 1}"
+
+
 def _prepare_sql(raw):
     sql = (raw or "").strip()
     if not sql:
@@ -839,9 +873,9 @@ def _execute_mysql(sql):
             conn.start_transaction(readonly=True)
             started = perf_counter()
             with cursor(conn) as cur:
-                cur.execute(sql)
+                cur.execute(_capped(sql))
                 columns = [col[0] for col in (cur.description or [])]
-                rows = cur.fetchmany(501)
+                rows = cur.fetchall()
             elapsed = (perf_counter() - started) * 1000
         except mysql.connector.Error as exc:
             raise ApiError(f"MySQL: {exc.msg}", 400)
@@ -860,9 +894,9 @@ def _execute_ts(sql):
             conn.execute("SET LOCAL statement_timeout = '8000ms'")
             started = perf_counter()
             with conn.cursor() as cur:
-                cur.execute(sql)
+                cur.execute(_capped(sql))
                 columns = [desc.name for desc in (cur.description or [])]
-                rows = cur.fetchmany(501)
+                rows = cur.fetchall()
             elapsed = (perf_counter() - started) * 1000
         except psycopg.Error as exc:
             message = str(exc)
@@ -914,8 +948,8 @@ def run_sql():
     else:
         columns, rows, elapsed = _execute_ts(sql)
 
-    truncated = len(rows) > 500
-    rows = rows[:500]
+    truncated = len(rows) > SQL_LAB_ROW_LIMIT
+    rows = rows[:SQL_LAB_ROW_LIMIT]
     return jsonify(
         {
             "query": {"id": query_id or None, "title": title, "db": db},

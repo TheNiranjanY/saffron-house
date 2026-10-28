@@ -1520,6 +1520,7 @@ WHERE event_time &gt;= now() - INTERVAL '30 days';
 </tbody>
 </table>
 <p>The difference between billed revenue and successful collections is <strong>₹1,262.99</strong>, the unpaid balance on three partial bills whose grand totals sum to ₹2,152.50. Revenue and collections are intentionally reported as separate measures.</p>
+<p>The reconciliation query sums the raw <code>order_event</code> stream rather than a continuous aggregate. That keeps the check exact even if an hourly bucket has not been materialised yet, while the KPI tiles and charts continue to read the precomputed aggregates for speed.</p>
 <h3 id="103-benchmark-window-reconciliation">10.3 Benchmark-window reconciliation</h3>
 <p>The 90-day benchmark window is defined in Asia/Kolkata calendar days and supplied to both stores as explicit bounds. Its dataset is 212,484 events and 22,085 bills. MySQL revenue and TimescaleDB revenue are both ₹28,783,764.50; the API reports an exact match with a ₹0.00 difference.</p>
 <p>An earlier version aligned one store with <code>now() - 90 days</code> and the other with a calendar-day boundary, which produced a one-day/₹3,087 discrepancy. The fix was to compute the same explicit start and end for both queries in <code>backend/restaurant/benchmark.py</code>. This is a useful example of how easily a "performance benchmark" can compare different data.</p>
@@ -1739,38 +1740,42 @@ WHERE event_time &gt;= now() - INTERVAL '30 days';
 <hr />
 <h2 id="12-verification-testing-and-demonstration">12. Verification, testing and demonstration</h2>
 <h3 id="121-automated-tests">12.1 Automated tests</h3>
-<p><code>backend/tests/test_api.py</code> exercises the running databases:</p>
+<p>The suite runs against the live databases (no mocks) and covers the whole application surface, not just the happy path:</p>
 <table>
 <thead>
 <tr>
-<th>Test</th>
+<th>Module</th>
 <th>What it verifies</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>test_health_reports_both_stores</code></td>
-<td>MySQL and TimescaleDB connectivity and status</td>
+<td><code>test_api.py</code></td>
+<td>Connectivity, menu/dining dimensions, SQL Lab write rejection, dashboard reconciliation, full order → billing lifecycle</td>
 </tr>
 <tr>
-<td><code>test_menu_and_dining_dimensions</code></td>
-<td>Menu/category data, table summary and waiter filtering</td>
+<td><code>test_order_rules.py</code></td>
+<td>Payload validation and state machine (<code>PLACED → PREPARING → PREPARED</code>), table release on cancel, bill math with discounts and tax, split payments, overpay and duplicate-bill guards</td>
 </tr>
 <tr>
-<td><code>test_sql_lab_blocks_writes</code></td>
-<td><code>DELETE</code> is rejected; multiple statements are rejected</td>
+<td><code>test_catalog_and_customers.py</code></td>
+<td>Category/item CRUD, duplicate and length validation, availability toggles reaching the menu and blocking ordering, guest directory search and validation</td>
 </tr>
 <tr>
-<td><code>test_dashboard_reconciles_both_stores</code></td>
-<td>Dashboard reconciliation is exact and outbox is drained</td>
+<td><code>test_analytics_api.py</code></td>
+<td>SQL Lab catalog, read-only enforcement, 500-row truncation, dashboard KPIs and reconciliation, every analytics payload, window/limit guards</td>
 </tr>
 <tr>
-<td><code>test_full_order_billing_lifecycle</code></td>
-<td>Create → add lines → prepare → bill → partial payment → settlement → table release</td>
+<td><code>test_queries_and_system.py</code></td>
+<td>Service index, health, outbox idempotency, table/active-order invariant, list filters, pagination clamps and malformed-parameter rejection</td>
+</tr>
+<tr>
+<td><code>test_timeutil.py</code></td>
+<td>Kolkata offset handling, MySQL timestamp round-trips, ISO serialisation and date-window boundaries</td>
 </tr>
 </tbody>
 </table>
-<p>Result at the time of writing: <strong>5 passed in 2.92 s</strong>. The lifecycle test uses the live schema and settles the order it creates rather than deleting its audit trail.</p>
+<p>Result at the time of writing: <strong>28 passed</strong> across the six modules, green on three consecutive runs. Tests use unique suffixes for created rows and settle the orders they open rather than deleting the audit trail; the canonical seed restores the reference dataset afterwards.</p>
 <h3 id="122-data-verification">12.2 Data verification</h3>
 <table>
 <thead>
@@ -1826,6 +1831,7 @@ WHERE event_time &gt;= now() - INTERVAL '30 days';
 </tr>
 </tbody>
 </table>
+<p>Volumes are from the seed run used throughout this report (25 October 2026). The generator anchors its 120-day history to the current date, so reseeding on a later date adds service days and shifts the absolute counts and totals; every invariant and reconciliation difference remains the same.</p>
 <h3 id="123-interface-evidence">12.3 Interface evidence</h3>
 <table>
 <thead>

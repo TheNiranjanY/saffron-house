@@ -811,6 +811,8 @@ Correctness has three layers:
 
 The difference between billed revenue and successful collections is **₹1,262.99**, the unpaid balance on three partial bills whose grand totals sum to ₹2,152.50. Revenue and collections are intentionally reported as separate measures.
 
+The reconciliation query sums the raw `order_event` stream rather than a continuous aggregate. That keeps the check exact even if an hourly bucket has not been materialised yet, while the KPI tiles and charts continue to read the precomputed aggregates for speed.
+
 ### 10.3 Benchmark-window reconciliation
 
 The 90-day benchmark window is defined in Asia/Kolkata calendar days and supplied to both stores as explicit bounds. Its dataset is 212,484 events and 22,085 bills. MySQL revenue and TimescaleDB revenue are both ₹28,783,764.50; the API reports an exact match with a ₹0.00 difference.
@@ -943,17 +945,18 @@ The claim supported by this evaluation is therefore narrow but useful: for the d
 
 ### 12.1 Automated tests
 
-`backend/tests/test_api.py` exercises the running databases:
+The suite runs against the live databases (no mocks) and covers the whole application surface, not just the happy path:
 
-| Test | What it verifies |
+| Module | What it verifies |
 | --- | --- |
-| `test_health_reports_both_stores` | MySQL and TimescaleDB connectivity and status |
-| `test_menu_and_dining_dimensions` | Menu/category data, table summary and waiter filtering |
-| `test_sql_lab_blocks_writes` | `DELETE` is rejected; multiple statements are rejected |
-| `test_dashboard_reconciles_both_stores` | Dashboard reconciliation is exact and outbox is drained |
-| `test_full_order_billing_lifecycle` | Create → add lines → prepare → bill → partial payment → settlement → table release |
+| `test_api.py` | Connectivity, menu/dining dimensions, SQL Lab write rejection, dashboard reconciliation, full order → billing lifecycle |
+| `test_order_rules.py` | Payload validation and state machine (`PLACED → PREPARING → PREPARED`), table release on cancel, bill math with discounts and tax, split payments, overpay and duplicate-bill guards |
+| `test_catalog_and_customers.py` | Category/item CRUD, duplicate and length validation, availability toggles reaching the menu and blocking ordering, guest directory search and validation |
+| `test_analytics_api.py` | SQL Lab catalog, read-only enforcement, 500-row truncation, dashboard KPIs and reconciliation, every analytics payload, window/limit guards |
+| `test_queries_and_system.py` | Service index, health, outbox idempotency, table/active-order invariant, list filters, pagination clamps and malformed-parameter rejection |
+| `test_timeutil.py` | Kolkata offset handling, MySQL timestamp round-trips, ISO serialisation and date-window boundaries |
 
-Result at the time of writing: **5 passed in 2.92 s**. The lifecycle test uses the live schema and settles the order it creates rather than deleting its audit trail.
+Result at the time of writing: **28 passed** across the six modules, green on three consecutive runs. Tests use unique suffixes for created rows and settle the orders they open rather than deleting the audit trail; the canonical seed restores the reference dataset afterwards.
 
 ### 12.2 Data verification
 
@@ -970,6 +973,8 @@ Result at the time of writing: **5 passed in 2.92 s**. The lifecycle test uses t
 | 90-day benchmark reconciliation | ₹28,783,764.50 vs ₹28,783,764.50, difference ₹0.00 |
 | SQL Lab presets | 15 / 15 execute successfully |
 | Production build | Vite build succeeds; only the expected chunk-size warning |
+
+Volumes are from the seed run used throughout this report (25 October 2026). The generator anchors its 120-day history to the current date, so reseeding on a later date adds service days and shifts the absolute counts and totals; every invariant and reconciliation difference remains the same.
 
 ### 12.3 Interface evidence
 

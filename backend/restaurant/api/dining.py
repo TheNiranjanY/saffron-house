@@ -3,7 +3,7 @@ from flask import Blueprint, jsonify, request
 from restaurant.db import cursor, mysql_rows, mysql_tx
 from restaurant.errors import ApiError
 
-from .utils import enum_value, json_body, require
+from .utils import enum_value, json_body, query_int, require
 
 dining_bp = Blueprint("dining", __name__, url_prefix="/api")
 
@@ -100,7 +100,7 @@ def list_staff():
 @dining_bp.get("/customers")
 def list_customers():
     search = (request.args.get("q") or "").strip()
-    limit = min(max(int(request.args.get("limit", 12)), 1), 50)
+    limit = min(max(query_int("limit", 12), 1), 50)
     if search:
         like = f"%{search}%"
         where = "(c.name LIKE %s OR c.phone LIKE %s OR c.email LIKE %s)"

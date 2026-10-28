@@ -21,7 +21,7 @@ A complete restaurant POS and analytics application that keeps its operational t
 
 **Write path:** React → Flask → MySQL transaction (business rows + `analytics_outbox`) → commit → projector drains the outbox → TimescaleDB `order_event` → touched hourly buckets refreshed → dashboards read continuous aggregates.
 
-**Read path:** dashboards and charts query the continuous aggregates; SQL Lab can scan raw events or run relational MySQL queries. The analytics store needs no cross-database joins because dimension names are snapshotted onto each event.
+**Read path:** dashboards and charts query the continuous aggregates; cross-store reconciliation reads the raw `order_event` stream instead, so its totals match MySQL exactly rather than sitting on a CAGG refresh boundary. SQL Lab can scan raw events or run relational MySQL queries. The analytics store needs no cross-database joins because dimension names are snapshotted onto each event.
 
 The historical seed is the one intentional exception: it `COPY`-loads 283,634 generated events directly into TimescaleDB instead of replaying them through the outbox (see [Limitations](#honest-limitations)).
 
@@ -252,7 +252,13 @@ backend/
     db.py                    Pooled MySQL and TimescaleDB connections
     config.py                Environment configuration
   scripts/seed.py            Deterministic 120-day data generator and loader
-  tests/test_api.py          API, SQL Lab guard, reconciliation and lifecycle tests
+  tests/
+    test_api.py              Core API, SQL Lab guard, reconciliation and lifecycle tests
+    test_order_rules.py      Order/POS and billing rule enforcement (state machine, math, payments)
+    test_catalog_and_customers.py  Menu, category and guest-directory CRUD and validation
+    test_analytics_api.py    SQL Lab, dashboard, reconciliation, KPI payloads and window guards
+    test_queries_and_system.py  Health, outbox idempotency, list filters and pagination clamps
+    test_timeutil.py         Kolkata time zone helpers and date boundaries
 database/
   mysql/01_schema.sql        Tables, constraints, triggers, routines, view
   timescale/01_schema.sql    Hypertable, indexes, continuous aggregates, policies
@@ -290,7 +296,9 @@ Interquartile ranges (p25–p75): daily 24.11–35.14 / 22.34–36.13 / 4.19–6
 - **TimescaleDB:** 18 chunks, 15 compressed, 92.3% storage saved (12.9×), 4 continuous aggregates and 4 refresh policies active.
 - **Reconciliation:** full-history sales (29,465 bills, ₹38,421,396.00) and successful collections (35,400 payments, ₹38,420,133.01) match MySQL exactly; the ₹1,262.99 gap between billed revenue and collections is the open balance on 3 partial bills.
 - **SQL Lab:** all 15 presets execute; writes are rejected before execution.
-- **Tests/build:** API pytest suite passes, and the Vite production build succeeds.
+- **Tests/build:** 28-test pytest suite passes (rules, catalog, analytics, pagination, time zone), and the Vite production build succeeds.
+
+These figures are from the 25 October 2026 seed run used in the report. The generator anchors its 120-day window to the current date, so a later reseed adds service days and shifts the absolute totals; the invariants, percentages and zero-difference reconciliation still hold.
 
 ## Documentation
 

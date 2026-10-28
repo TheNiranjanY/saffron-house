@@ -24,6 +24,7 @@ from .utils import (
     json_body,
     optional_int,
     query_date,
+    query_int,
     sync_analytics,
 )
 
@@ -88,8 +89,8 @@ def list_orders():
     order_type = request.args.get("order_type")
     if order_type:
         order_type = enum_value(order_type, "order_type", ORDER_TYPES)
-    limit = min(max(int(request.args.get("limit", 25)), 1), 100)
-    offset = max(int(request.args.get("offset", 0)), 0)
+    limit = min(max(query_int("limit", 25), 1), 100)
+    offset = max(query_int("offset", 0), 0)
     search = (request.args.get("q") or "").strip()
     date_filter = query_date()
     if date_filter is None and scope == "today":

@@ -894,9 +894,11 @@ def load_timescale(events_path: Path):
 
             refresh_start = min_ts - timedelta(days=1)
             # Include the current bucket: TRUNCATE leaves old materialized
-            # rows behind, so a fresh seed must overwrite them. Live writes
-            # later refresh their own hour through the projector.
-            refresh_end = max_ts + timedelta(days=1)
+            # rows behind, so a fresh seed must overwrite them. Stop at the
+            # end of the current hour: a future watermark would make the
+            # real-time tail hide every later live write until the next
+            # refresh, which the projector only does per projected batch.
+            refresh_end = max_ts.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
             refresh_seconds = {}
             for cagg in (
                 "sales_hourly",

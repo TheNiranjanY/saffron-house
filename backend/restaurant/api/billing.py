@@ -20,6 +20,7 @@ from .utils import (
     enum_value,
     json_body,
     query_date,
+    query_int,
     sync_analytics,
 )
 
@@ -189,8 +190,8 @@ def list_bills():
         status = enum_value(status, "status", BILL_STATUSES)
     raw_order = request.args.get("order_id")
     order_id = as_int(raw_order, "order_id", 1) if raw_order else None
-    limit = min(max(int(request.args.get("limit", 40)), 1), 200)
-    offset = max(int(request.args.get("offset", 0)), 0)
+    limit = min(max(query_int("limit", 40), 1), 200)
+    offset = max(query_int("offset", 0), 0)
 
     return jsonify(
         _fetch_bills(date_from, date_to, status, order_id, limit, offset, False)
@@ -199,7 +200,7 @@ def list_bills():
 
 @billing_bp.get("/bills/outstanding")
 def outstanding_bills():
-    limit = min(max(int(request.args.get("limit", 50)), 1), 200)
+    limit = min(max(query_int("limit", 50), 1), 200)
     return jsonify(
         _fetch_bills(None, None, None, None, limit, 0, True)
     )

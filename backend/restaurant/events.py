@@ -1,5 +1,6 @@
 import json
 import logging
+import time
 from datetime import timedelta
 from decimal import Decimal
 
@@ -120,29 +121,35 @@ CAGG_VIEWS = (
 )
 
 
-def _refresh_hours(event_times):
+def _refresh_hours(event_times, attempts=3):
     """Refresh the hourly buckets touched by a projected batch.
 
     TimescaleDB's real-time tail cannot expose rows written into a bucket that
     a refresh already materialized, so drain-then-refresh keeps the dashboard
-    reconciliation exact without waiting for the 30-minute policy.
+    reconciliation exact without waiting for the 30-minute policy. Retry once
+    or twice because a refresh can fail while the database is still warming up.
     """
     if not event_times:
         return
     earliest = min(event_times).replace(tzinfo=LOCAL_TZ, minute=0, second=0, microsecond=0)
     latest = max(event_times).replace(tzinfo=LOCAL_TZ, minute=0, second=0, microsecond=0)
     end = latest + timedelta(hours=1)
-    try:
-        with ts_conn() as conn:
-            with conn.cursor() as cur:
-                for view in CAGG_VIEWS:
-                    cur.execute(
-                        f"CALL refresh_continuous_aggregate('{view}', %s, %s)",
-                        (earliest, end),
-                    )
-            conn.commit()
-    except Exception:
-        log.exception("Continuous aggregate refresh failed")
+    for attempt in range(attempts):
+        try:
+            with ts_conn() as conn:
+                with conn.cursor() as cur:
+                    for view in CAGG_VIEWS:
+                        cur.execute(
+                            f"CALL refresh_continuous_aggregate('{view}', %s, %s)",
+                            (earliest, end),
+                        )
+                conn.commit()
+            return
+        except Exception:
+            if attempt == attempts - 1:
+                log.exception("Continuous aggregate refresh failed")
+            else:
+                time.sleep(0.15 * (attempt + 1))
 
 
 def project_pending(batch_size: int = 500, max_batches: int = 40):
